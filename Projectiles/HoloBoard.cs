@@ -67,6 +67,8 @@ namespace SerumW.Projectiles
             {
                 if (owner.HeldItem.type == ModContent.ItemType<SerumWItem>() && !owner.GetModPlayer<ClawPlayer>().IsWarping)
                 {
+                    Main.spriteBatch.End();
+                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
                     Texture2D Aim = mod.GetTexture("Images/Aim");
                     spriteBatch.Draw(Aim, Main.MouseWorld - Main.screenPosition, null, Color.White, 0, Aim.Size() / 2, 0.5f, SpriteEffects.None, 0);
                 }

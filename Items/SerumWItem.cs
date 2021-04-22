@@ -30,6 +30,7 @@ namespace SerumW.Items
 			item.noMelee = true;
 			item.width = 39;
 			item.height = 46;
+			item.maxStack = 999;
 			item.useTime = 20;
 			item.useAnimation = 20;
 			item.useStyle = ItemUseStyleID.HoldingOut;
@@ -44,7 +45,27 @@ namespace SerumW.Items
 
         public override bool CanUseItem(Player player)
         {
-			return player.GetModPlayer<ClawPlayer>().WarpingCD == 0;
+			if(player.GetModPlayer<ClawPlayer>().WarpingCD != 0)
+            {
+				return false;
+            }
+            if (player.HasBuff(ModContent.BuffType<SerumBuff>()))
+            {
+				item.useStyle = ItemUseStyleID.HoldingOut;
+				item.noUseGraphic = true;
+				item.useTime = 10;
+				item.useAnimation = 10;
+				item.autoReuse = true;
+			}
+            else
+            {
+				item.useStyle = ItemUseStyleID.HoldingUp;
+				item.noUseGraphic = false;
+				item.useTime = 45;
+				item.useAnimation = 45;
+				item.autoReuse = false;
+            }
+			return true;
         }
 
         public override bool Shoot(Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack)
