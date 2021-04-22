@@ -61,8 +61,8 @@ namespace SerumW.Items
             {
 				item.useStyle = ItemUseStyleID.HoldingUp;
 				item.noUseGraphic = false;
-				item.useTime = 45;
-				item.useAnimation = 45;
+				item.useTime = 90;
+				item.useAnimation = 90;
 				item.autoReuse = false;
             }
 			return true;
@@ -122,7 +122,7 @@ namespace SerumW.Items
 		}
 
 
-		private bool Contains(NPC npc, Vector2 Pos)
+        private bool Contains(NPC npc, Vector2 Pos)
 		{
 			int width = npc.width < 16 ? 16 : npc.width;
 			int height = npc.height < 16 ? 16 : npc.height;

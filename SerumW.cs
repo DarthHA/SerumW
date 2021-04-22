@@ -299,7 +299,7 @@ namespace SerumW
                 }
 
             }
-
+            orig.Invoke(self, !BehindTile);
             orig.Invoke(self,BehindTile);
         }
 

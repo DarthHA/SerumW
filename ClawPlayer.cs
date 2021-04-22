@@ -482,10 +482,10 @@ namespace SerumW
 			CrossBiomes.Clear();
 
 			player.immune = true;
-			player.immuneTime = 60;
+			player.immuneTime = 150;
 			for (int i = 0; i < player.hurtCooldowns.Length; i++)
             {
-				player.hurtCooldowns[i] = 60;
+				player.hurtCooldowns[i] = 150;
             }
 			player.immuneNoBlink = true;
 

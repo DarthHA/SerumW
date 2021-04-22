@@ -13,6 +13,7 @@ namespace SerumW
 
 
         private Vector2? OldVel = null;
+        private bool? OldDontTakeDamage = null;
         public override bool PreAI(NPC npc)
         {
             if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().IsWarping)
@@ -24,8 +25,20 @@ namespace SerumW
                 }
                 npc.frameCounter = 0;
                 npc.position = npc.oldPosition;
+                if (OldDontTakeDamage == null)
+                {
+                    OldDontTakeDamage = npc.dontTakeDamage;
+                    npc.dontTakeDamage = true;
+                }
                 return false;
             }
+
+            if (OldDontTakeDamage != null)
+            {
+                npc.dontTakeDamage = (bool)OldDontTakeDamage;
+                OldDontTakeDamage = null;
+            }
+
             if (IsControlled2(npc))
             {
                 if (OldVel == null)
@@ -126,14 +139,6 @@ namespace SerumW
             }
         }
 
-        public override bool StrikeNPC(NPC npc, ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
-        {
-            if (IsControlled(npc))
-            {
-                return false;
-            }
-            return true;
-        }
 
 
         public override bool CheckActive(NPC npc)
@@ -148,20 +153,8 @@ namespace SerumW
             }
             return true;
         }
+        
 
-
-        public override bool CheckDead(NPC npc)
-        {
-            if (IsControlled(npc))
-            {
-                if (npc.life <= 0)
-                {
-                    npc.life = 1;
-                }
-                return false;
-            }
-            return true;
-        }
 
         public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
         {

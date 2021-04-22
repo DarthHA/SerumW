@@ -94,7 +94,7 @@ namespace SerumW.Projectiles
 
         private void ApplyDamage(Player owner, NPC target)
         {
-            int BaseDmg = projectile.damage * 1000;
+            int BaseDmg = projectile.damage * 2500;
             float bonus = owner.meleeDamage + owner.rangedDamage + owner.magicDamage + owner.minionDamage + owner.thrownDamage - 4;
             int dmg = (int)(BaseDmg * bonus);
             if (dmg < BaseDmg) dmg = BaseDmg;
