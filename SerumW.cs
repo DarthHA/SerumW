@@ -31,7 +31,7 @@ namespace SerumW
 
 
         public static bool IsCapturing = false;             //确定函数执行时机
-        public static bool PlayerDrawed = false;            //确保玩家每帧绘制一次
+        public static bool PlayerDrawed = false;            //确保玩家每帧绘制一次次
 
 
         public static Texture2D[] SavedBG = new Texture2D[TPCount];          //背景贴图
@@ -77,7 +77,7 @@ namespace SerumW
             orig.Invoke(self, drawPlayer, Position, rotation, rotationOrigin, shadow);
             if (!Main.gameMenu)
             {
-                if (!PlayerDrawed)
+                if (!PlayerDrawed || Main.gamePaused)
                 {
                     PlayerDrawed = true;
 
@@ -247,22 +247,42 @@ namespace SerumW
                         {
                             if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().Timer < 7)
                             {
-                                float k = Main.LocalPlayer.GetModPlayer<ClawPlayer>().Timer / 7f;
-                                if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().Direction >= 0) k = 1 - k;
+                                if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().Direction < 0)
+                                {
+                                    float k = Main.LocalPlayer.GetModPlayer<ClawPlayer>().Timer / 7f;
 
-                                Main.spriteBatch.Draw(SavedBG[index - 1],
-                                    new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
-                                    Color.White);
-                                Main.spriteBatch.Draw(BorderTex,
-                                    new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
-                                    Color.White);
+                                    Main.spriteBatch.Draw(SavedBG[index - 1],
+                                        new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                    Main.spriteBatch.Draw(BorderTex,
+                                        new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
 
-                                Main.spriteBatch.Draw(SavedBG[index],
-                                    new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
-                                    Color.White);
-                                Main.spriteBatch.Draw(BorderTex,
-                                    new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
-                                    Color.White);
+                                    Main.spriteBatch.Draw(SavedBG[index],
+                                        new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                    Main.spriteBatch.Draw(BorderTex,
+                                        new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                }
+                                else
+                                {
+                                    float k = 1 - Main.LocalPlayer.GetModPlayer<ClawPlayer>().Timer / 7f;
+
+                                    Main.spriteBatch.Draw(SavedBG[index],
+                                        new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                    Main.spriteBatch.Draw(BorderTex,
+                                        new Rectangle((int)(Main.screenWidth * k) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+
+                                    Main.spriteBatch.Draw(SavedBG[index - 1],
+                                        new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                    Main.spriteBatch.Draw(BorderTex,
+                                        new Rectangle((int)(Main.screenWidth * (k - 1)) + Random.X, Random.Y, Main.screenWidth, Main.screenHeight),
+                                        Color.White);
+                                }
                             }
                             else
                             {

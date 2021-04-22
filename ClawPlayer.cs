@@ -209,7 +209,8 @@ namespace SerumW
 			if(IsWarping)             //锁定缩放
             {
 				Main.GameViewMatrix.Zoom = new Vector2(1, 1);
-            }
+				Main.CaptureModeDisabled = true;
+			}
 
 			if (IsWarping)
 			{
@@ -408,7 +409,7 @@ namespace SerumW
 		public void InitWarp(int target)
 		{
 			Main.GameViewMatrix.Zoom = new Vector2(1, 1);   //锁定缩放
-
+			Main.CaptureModeDisabled = true;
 			SelectedTarget = target;
 			Direction = Math.Sign(Main.npc[target].Center.X - player.Center.X + 0.01f);
 			warpingProgress = WarpingProgress.TeleportToEnemy;
@@ -487,6 +488,17 @@ namespace SerumW
 				player.hurtCooldowns[i] = 60;
             }
 			player.immuneNoBlink = true;
+
+			Main.CaptureModeDisabled = false;
+
+            if (player.HeldItem.type == ModContent.ItemType<SerumWItem>())
+            {
+				player.HeldItem.stack--;
+                if (player.HeldItem.stack <= 0)
+                {
+					player.HeldItem.TurnToAir();
+                }
+            }
 		}
 
 
