@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "b0hib+21YNdRyoruNQU5LYzZEpNLa2jhGG2HP3xCgEwFwhnGbZZAvvC97ezIVIUI620kmjfrJ8fGm/tIoN9q5A==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Administrator\\Documents\\My Games\\Terraria\\ModLoader\\Mod Sources\\SerumW\\SerumW.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Administrator\\.nuget\\packages\\tmodloader.codeassist\\0.1.2\\tmodloader.codeassist.0.1.2.nupkg.sha512"
+  ],
+  "logs": []
+}
