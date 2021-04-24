@@ -143,7 +143,7 @@ namespace SerumW
 
         public override bool CheckActive(NPC npc)
         {
-            if (IsControlled(npc))
+            if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().IsWarping)
             {
                 if (npc.timeLeft < 10)
                 {
@@ -256,6 +256,13 @@ namespace SerumW
             return default;
         }
 
-        
+        public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
+        {
+            if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().IsWarping)
+            {
+                maxSpawns = 0;
+                spawnRate *= 5;
+            }
+        }
     }
 }

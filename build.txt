@@ -1,3 +1,4 @@
-displayName = Serum W (血清 - W)
+displayName = [c/00ffff:Serum W (血清-W)]
 author = Volknet_Online(网络核心)
-version = 0.0
+version = 0.2
+homepage = https://space.bilibili.com/442236013

@@ -1,1 +1,23 @@
-奇点技术，震撼人心
+This mod adds the Serum W from game 'Library of Ruina'.
+You can use Teleportation Potions[i:2351] * 15, Recall Potions[i:2350] * 10, Lumite Bar[i:3467] * 10, and Nanites[i:1346] * 250 to craft one near an Ancient Manipulator[i:3549].
+Due to technical issues, this mod is not stable much, but I'll do my best to fix it.
+[c/FF0000:This mod cannot be used in multiplayer.]
+
+Changelog:
+v0.2
+-Some bugs fix.
+-Now environment effects will not affect warping player.
+-Doubles the cooldown of Serum.
+-Wires will not be activated when warping.
+
+
+该mod加入了游戏《废墟图书馆》中的血清-W。
+你可以使用15瓶随机传送药水[i:2351]，10瓶回忆药水[i:2350]，10个夜明锭[i:3467]，和250个纳米机器人[i:1346]在远古操纵机器[i:3549]处合成。
+由于技术原因，该mod并非十分稳定，但我会尽量修复。
+[c/FF0000:该mod不能联机。]
+
+更新日志:
+-一些bug修复。
+-现在环境效果不会影响正在穿梭的玩家。
+-血清冷却时间加倍。
+-穿梭时不会激活电路。

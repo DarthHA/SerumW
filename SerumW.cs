@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SerumW.Buffs;
 using SerumW.Projectiles;
 using SerumW.UI;
 using System.Collections.Generic;
@@ -14,8 +15,10 @@ namespace SerumW
 {
     public class SerumW : Mod
 	{
-        //特效
+
         public static SerumW Instance;
+
+        //特效
         public static Effect SpaceBlur;
         public static Effect CustomDrawBlur;
         public static Effect GradBlur;
@@ -26,9 +29,9 @@ namespace SerumW
         public static Effect ClawSlashBlur;
         public static Effect HoloEffect;
 
-        private UserInterface _ClawUIInterface;
+        private UserInterface _ClawUIInterface;   //UI
         internal ClawUI _ClawUI;
-
+        public static float Progress = 0;
 
         public static bool IsCapturing = false;             //确定函数执行时机
         public static bool PlayerDrawed = false;            //确保玩家每帧绘制一次次
@@ -36,7 +39,7 @@ namespace SerumW
 
         public static Texture2D[] SavedBG = new Texture2D[TPCount];          //背景贴图
 
-        public static float Progress = 0;
+        public static SerumWConfig config;
 
         public SerumW()
         {
@@ -70,12 +73,68 @@ namespace SerumW
             On.Terraria.Main.DrawNPCs += new On.Terraria.Main.hook_DrawNPCs(DrawNPCsHook);
             On.Terraria.Main.DrawPlayer += new On.Terraria.Main.hook_DrawPlayer(DrawPlayerHook);
             On.Terraria.Main.DrawNPC += new On.Terraria.Main.hook_DrawNPC(DrawNPCHook);
+            On.Terraria.Main.DrawItems += new On.Terraria.Main.hook_DrawItems(DrawItemsHook);
         }
 
-        public static void DrawPlayerHook(On.Terraria.Main.orig_DrawPlayer orig,Main self, Player drawPlayer, Vector2 Position, float rotation, Vector2 rotationOrigin, float shadow = 0f)
+        
+        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            orig.Invoke(self, drawPlayer, Position, rotation, rotationOrigin, shadow);
-            if (!Main.gameMenu)
+            int ClawUIIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Interface Logic 1"));
+            if (ClawUIIndex != -1)
+            {
+                layers.Insert(ClawUIIndex, new LegacyGameInterfaceLayer(
+                    "SerumW: ClawUI",
+                    delegate
+                    {
+                        _ClawUIInterface.Draw(Main.spriteBatch, new GameTime());
+                        return true;
+                    },
+                    InterfaceScaleType.UI)
+                );
+            }
+        }
+
+
+
+
+        public override void Unload()
+        {
+            SpaceBlur = null;
+            CustomDrawBlur = null;
+            GradBlur = null;
+            SpaceCrashBlur = null;
+            SpaceInBlur = null;
+            TPTrailEffect = null;
+            UIEffect = null;
+            ClawSlashBlur = null;
+            HoloEffect = null;
+
+            foreach(Texture2D tex in SavedBG)
+            {
+                if (tex != null && !tex.IsDisposed)
+                {
+                    tex.Dispose();
+                }
+            }
+            Instance = null;
+            Filters.Scene["SerumW:WarpEffect"].Deactivate();
+        }
+
+
+        #region Patch相关
+        public static void DrawPlayerHook(On.Terraria.Main.orig_DrawPlayer orig, Main self, Player drawPlayer, Vector2 Position, float rotation, Vector2 rotationOrigin, float shadow = 0f)
+        {
+            if (Main.gameMenu)
+            {
+                orig.Invoke(self, drawPlayer, Position, rotation, rotationOrigin, shadow);
+                return;
+            }
+            if(!IsCapturing || !drawPlayer.GetModPlayer<ClawPlayer>().IsWarping)
+            {
+                orig.Invoke(self, drawPlayer, Position, rotation, rotationOrigin, shadow);
+            }
+
+            if (drawPlayer == Main.LocalPlayer)
             {
                 if (!PlayerDrawed || Main.gamePaused)
                 {
@@ -140,48 +199,7 @@ namespace SerumW
             }
         }
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int ClawUIIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Interface Logic 1"));
-            if (ClawUIIndex != -1)
-            {
-                layers.Insert(ClawUIIndex, new LegacyGameInterfaceLayer(
-                    "SerumW: ClawUI",
-                    delegate
-                    {
-                        _ClawUIInterface.Draw(Main.spriteBatch, new GameTime());
-                        return true;
-                    },
-                    InterfaceScaleType.UI)
-                );
-            }
-        }
 
-
-
-
-        public override void Unload()
-        {
-            SpaceBlur = null;
-            CustomDrawBlur = null;
-            GradBlur = null;
-            SpaceCrashBlur = null;
-            SpaceInBlur = null;
-            TPTrailEffect = null;
-            UIEffect = null;
-            ClawSlashBlur = null;
-            HoloEffect = null;
-
-            foreach(Texture2D tex in SavedBG)
-            {
-                if (tex != null && !tex.IsDisposed)
-                {
-                    tex.Dispose();
-                }
-            }
-            Instance = null;
-            Filters.Scene["SerumW:WarpEffect"].Deactivate();
-        }
 
         public static void DrawCaptureHook(On.Terraria.Main.orig_DrawCapture orig, Main self, Rectangle Area, CaptureSettings captureSettings)
         {
@@ -303,6 +321,18 @@ namespace SerumW
             orig.Invoke(self,BehindTile);
         }
 
+        public static void DrawItemsHook(On.Terraria.Main.orig_DrawItems orig,Main self)
+        {
+            if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().warpingProgress != WarpingProgress.TPing)
+            {
+                orig.Invoke(self);
+            }
+        }
+
+
+        #endregion
+
+
 
         public static void SetCustomShader(float r = 1, float g = 1, float b = 1, float alpha = 1)
         {
@@ -342,6 +372,23 @@ namespace SerumW
                 }
             }
         }
+
+        public override void UpdateMusic(ref int music, ref MusicPriority priority)
+        {
+            if (Main.myPlayer == -1 || Main.gameMenu || !Main.LocalPlayer.active)
+            {
+                return;
+            }
+            if (Main.LocalPlayer.HasBuff(ModContent.BuffType<SerumBuff>()) || Main.LocalPlayer.GetModPlayer<ClawPlayer>().IsWarping)
+            {
+                if (config.UseBGM)
+                {
+                    music = GetSoundSlot(SoundType.Music, "Sounds/Music/Head Eye Claw");
+                    priority = MusicPriority.BossHigh;
+                }
+            }
+        }
+
 
     }
 }

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 using static SerumW.PlayerStatus;
 
@@ -107,12 +108,13 @@ namespace SerumW
 
         public override void UpdateDead()
         {
+            if (IsWarping)
+            {
+				QuickStop();
+            }
 			WarpingCD = 0;
-			warpingProgress = WarpingProgress.Default;
-			WarpCountIndex = 0;
-			Timer = 0;
         }
-
+		
         public override bool PreHurt(bool pvp, bool quiet, ref int damage, ref int hitDirection, ref bool crit, ref bool customDamage, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
 			return !IsWarping;
@@ -203,7 +205,7 @@ namespace SerumW
 			}
             else
             {
-				WarpingCD = 300;
+				WarpingCD = 600;
             }
 
 			if(IsWarping)             //锁定缩放
@@ -230,6 +232,31 @@ namespace SerumW
 				player.gravDir = 1;
 				player.channel = true;
 				player.mount.Dismount(player);
+
+				//阻止环境影响
+				player.buffImmune[BuffID.Suffocation] = true;
+				player.buffImmune[BuffID.TheTongue] = true;
+				player.buffImmune[BuffID.Webbed] = true;
+				player.buffImmune[BuffID.VortexDebuff] = true;
+				player.buffImmune[BuffID.Frozen] = true;
+				player.buffImmune[BuffID.Cursed] = true;
+				player.buffImmune[BuffID.Confused] = true;
+				player.buffImmune[BuffID.Stoned] = true;
+				player.buffImmune[BuffID.WindPushed] = true;
+				player.buffImmune[BuffID.Burning] = true;
+				player.lavaImmune = true;
+				player.fireWalk = true;
+				player.findTreasure = false;
+				player.dangerSense = false;
+				player.invis = false;
+				player.detectCreature = false;
+				player.ClearBuff(BuffID.MinecartLeft);
+				player.ClearBuff(BuffID.MinecartLeftMech);
+				player.ClearBuff(BuffID.MinecartLeftWood);
+				player.ClearBuff(BuffID.MinecartRight);
+				player.ClearBuff(BuffID.MinecartRightMech);
+				player.ClearBuff(BuffID.MinecartRightWood);
+
 
                 if (warpingProgress == WarpingProgress.TeleportToEnemy)         //传送到敌人
                 {
@@ -367,9 +394,9 @@ namespace SerumW
                 {
 					Timer++;
 
-                    if (Timer == 40)
-                    {
-						int protmp=Projectile.NewProjectile(Main.npc[SelectedTarget].Center, Vector2.Zero, ModContent.ProjectileType<DamageProj>(), WeaponDamage, 0, player.whoAmI, SelectedTarget);
+					if (Timer == 40)
+					{
+						int protmp = Projectile.NewProjectile(Main.npc[SelectedTarget].Center, Vector2.Zero, ModContent.ProjectileType<DamageProj>(), WeaponDamage, 0, player.whoAmI, SelectedTarget);
 						foreach (Biome b in CrossBiomes)
 						{
 							(Main.projectile[protmp].modProjectile as DamageProj).Effects.Add(b);
@@ -410,15 +437,17 @@ namespace SerumW
 		{
 			Main.GameViewMatrix.Zoom = new Vector2(1, 1);   //锁定缩放
 			Main.CaptureModeDisabled = true;
-			SelectedTarget = target;
-			Direction = Math.Sign(Main.npc[target].Center.X - player.Center.X + 0.01f);
+
 			warpingProgress = WarpingProgress.TeleportToEnemy;
 			Timer = 0;
+			SelectedTarget = target;
+			Direction = Math.Sign(Main.npc[target].Center.X - player.Center.X + 0.01f);
+
 			MoveScreen.CurrentPos = Main.screenPosition;
 			MoveScreen.TargetPos = Main.npc[target].Center - new Vector2(Direction, 0) * (5 + Main.npc[target].width / 2) - new Vector2(Main.screenWidth, Main.screenHeight) / 2;
 			MoveScreen.Distance = Vector2.Distance(MoveScreen.TargetPos, MoveScreen.CurrentPos);
 
-            if (player.HeldItem.type == ModContent.ItemType<SerumWItem>())
+            if (player.HeldItem.type == ModContent.ItemType<SerumWItem>())            //储存伤害
             {
 				WeaponDamage = player.HeldItem.damage;
             }
@@ -426,11 +455,10 @@ namespace SerumW
 			WarpCountIndex = 0;
 			OriginalNPCPos = Main.npc[target].Center;
 
-			WarpingPlayerPos[0] = player.Center;
+			WarpingPlayerPos[0] = player.Center;            //设定传送坐标
 			WarpingScreenPos[0] = Main.screenPosition;
 			WarpingPlayerPos[TPCount - 1] = MoveScreen.TargetPos + new Vector2(Main.screenWidth, Main.screenHeight) / 2;
 			WarpingScreenPos[TPCount - 1] = MoveScreen.TargetPos;
-
 			for (int i = 1; i < TPCount - 1; i++)
 			{
 				WarpingPlayerPos[i] = GetRandomPos();
@@ -438,7 +466,7 @@ namespace SerumW
 				WarpingScreenPos[i] = ScreenPos + new Vector2(Main.rand.Next(-400, 400), Main.rand.Next(-250, 250));
 			}
 
-			for (int i = 0; i < TPCount; i++)
+			for (int i = 0; i < TPCount; i++)         //远程渲染存储地形
 			{
 				bool Light = false;
 				if (i > 0 && i < TPCount - 1) Light = true;
