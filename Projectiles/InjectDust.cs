@@ -30,6 +30,10 @@ namespace SerumW.Projectiles
             projectile.ai[0]++;
             projectile.frame = (int)(projectile.ai[0] * 0.4);
             projectile.scale = (float)Math.Sqrt(projectile.ai[0] / 60);
+            if (Main.player[projectile.owner].active)
+            {
+                projectile.Center = Main.player[projectile.owner].Center;
+            }
         }
 
 

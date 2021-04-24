@@ -13,14 +13,22 @@ namespace SerumW.Items
 		public override void SetStaticDefaults()
 		{
 			DisplayName.SetDefault("Serum W");
-			DisplayName.AddTranslation(GameCulture.Chinese, "血清 - W");
+			DisplayName.AddTranslation(GameCulture.Chinese, "血清-W");
 			Tooltip.SetDefault(
 				"Use this for the first time to activate serum, then select an enemy to launch a strong attack\n" +
+				"Different biomes you crossed through will bring the main enemy different effects\n" +
+				"Inflict 25% damage to other surrounding enemies\n" +
+				"Serum will be consumed after attack\n" +
 				"1 minute duration\n" +
-				"\'It contains a singularity technology\'");
+				"P.S.: Do not use near the boundary of the world\n" +
+				"\'It contains a powerful singularity technology\'");
 			Tooltip.AddTranslation(GameCulture.Chinese, 
-				"首次使用激活血清，然后选中一名敌人发动猛攻\n" +
+				"首次使用激活血清，然后选中一名敌人发起猛攻\n" +
+				"穿越的不同生物群落会给主要敌人带来不同的效果\n" +
+				"对周围其他敌人造成25%溅射伤害\n" +
+				"血清会在攻击后被消耗\n" +
 				"1分钟持续时间\n" +
+				"注意：不要在世界边界附近使用\n" +
 				"“奇点技术，震撼人心”");
 		}
 
@@ -45,6 +53,7 @@ namespace SerumW.Items
 
         public override bool CanUseItem(Player player)
         {
+			
 			if(player.GetModPlayer<ClawPlayer>().WarpingCD != 0)
             {
 				return false;
@@ -65,6 +74,19 @@ namespace SerumW.Items
 				item.useAnimation = 90;
 				item.autoReuse = false;
             }
+
+			/*
+            if (player.HasBuff(ModContent.BuffType<SerumBuff>()))
+            {
+				Vector2 ScreenPos = player.Center + new Vector2(Main.screenWidth, Main.screenHeight) / 2;
+				Vector2 vector = new Vector2(Main.leftWorld + 656f, Main.topWorld + 656f) - Main.GameViewMatrix.Translation;
+				Vector2 vector2 = new Vector2(Main.rightWorld - Main.screenWidth / Main.GameViewMatrix.Zoom.X - 672f, Main.bottomWorld - Main.screenHeight / Main.GameViewMatrix.Zoom.Y - 672f) - Main.GameViewMatrix.Translation;
+				vector = Utils.Round(vector);
+				vector2 = Utils.Round(vector2);
+				if (ScreenPos != Vector2.Clamp(ScreenPos, vector, vector2)) return false;
+				
+            }
+			*/
 			return true;
         }
 
@@ -118,6 +140,7 @@ namespace SerumW.Items
 
 		public bool CanBeChasedBy(NPC npc)
 		{
+			if (npc.type == NPCID.Angler) return true;
 			return npc.active && npc.lifeMax > 5 && !npc.dontTakeDamage && !npc.friendly && !npc.immortal;
 		}
 
@@ -136,5 +159,17 @@ namespace SerumW.Items
 			}
 			return false;
 		}
-	}
+
+        public override void AddRecipes()
+        {
+			ModRecipe recipe = new ModRecipe(mod);
+			recipe.AddIngredient(ItemID.TeleportationPotion, 15);
+			recipe.AddIngredient(ItemID.RecallPotion, 10);
+			recipe.AddIngredient(ItemID.LunarBar, 10);
+			recipe.AddIngredient(ItemID.Nanites, 250);
+			recipe.AddTile(TileID.LunarCraftingStation);
+			recipe.SetResult(this);
+			recipe.AddRecipe();
+        }
+    }
 }

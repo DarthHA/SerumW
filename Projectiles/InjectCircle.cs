@@ -29,6 +29,10 @@ namespace SerumW.Projectiles
         {
             projectile.scale = (float)Math.Sqrt((10f - projectile.timeLeft) / 10f);
             projectile.frame = Utils.Clamp(4 - projectile.timeLeft / 2, 0, 4);
+            if (Main.player[projectile.owner].active)
+            {
+                projectile.Center = Main.player[projectile.owner].Center;
+            }
         }
 
 

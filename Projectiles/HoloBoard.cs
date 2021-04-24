@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using SerumW.Buffs;
 using SerumW.Items;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -60,6 +61,7 @@ namespace SerumW.Projectiles
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor)
         {
+            projectile.ai[1]++;
             DrawMain();
             DrawLine();
             Player owner = Main.player[projectile.owner];
@@ -70,7 +72,10 @@ namespace SerumW.Projectiles
                     Main.spriteBatch.End();
                     Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.AnisotropicClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
                     Texture2D Aim = mod.GetTexture("Images/Aim");
-                    spriteBatch.Draw(Aim, Main.MouseWorld - Main.screenPosition, null, Color.White, 0, Aim.Size() / 2, 0.5f, SpriteEffects.None, 0);
+                    float alpha = Utils.Clamp(projectile.ai[1] / 30f, 0f, 1f);
+                    float rot = projectile.ai[1] / 240 * MathHelper.TwoPi;
+                    float scale = (float)Math.Sin(projectile.ai[1] / 120 * MathHelper.Pi) * 0.1f + 0.95f;
+                    spriteBatch.Draw(Aim, Main.MouseWorld - Main.screenPosition, null, Color.White * alpha, rot, Aim.Size() / 2, scale * 0.5f, SpriteEffects.None, 0);
                 }
             }
             return false;
