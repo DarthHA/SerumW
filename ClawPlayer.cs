@@ -362,11 +362,20 @@ namespace SerumW
 				if (warpingProgress == WarpingProgress.EndSlash)
                 {
 					Timer++;
-                    if (Timer == 60)
+                    if (Timer == 60)  //向前的短暂位移
                     {
 						Main.npc[SelectedTarget].Center += new Vector2(Direction * 20, 0);
 						Main.npc[SelectedTarget].oldPosition += new Vector2(Direction * 60, 0);
 						player.Center += new Vector2(Direction * (250 + Main.npc[SelectedTarget].width / 2), 0);
+                        if (Collision.SolidCollision(player.position, player.width, player.height))       //尽量防卡吧
+                        {
+							bool success = false;
+							Vector2 NewPos = GetRandomPos(player.Center + new Vector2(Direction, 0) * 200, 200,ref success);
+                            if (success)
+                            {
+								player.position = NewPos;
+                            }
+                        }
 						Main.PlaySound(mod.GetLegacySoundSlot(SoundType.Custom, "Sounds/CutScene"), player.Center);
 					}
 					if (Timer > 120 && Timer < 160)
@@ -466,6 +475,25 @@ namespace SerumW
 				WarpingScreenPos[i] = ScreenPos + new Vector2(Main.rand.Next(-400, 400), Main.rand.Next(-250, 250));
 			}
 
+			for(int i = 0; i < TPCount; i++)           //刷新地图
+            {
+				int TileX = (int)(WarpingScreenPos[i].X / 16 - 2);
+				int TileY = (int)(WarpingScreenPos[i].Y / 16 - 2);
+				int TileWidth = Main.screenWidth / 16 + 2;
+				int TileHeight = Main.screenHeight / 16 + 2;
+				for (int x = TileX; x <= TileX + TileWidth; x++)
+				{
+					for (int y = TileY; y <= TileY + TileHeight; y++)
+					{
+						if (WorldGen.InWorld(x, y))
+						{
+							Main.Map.Update(x, y, 255);
+						}
+					}
+				}
+			}
+			Main.refreshMap = true;
+
 			for (int i = 0; i < TPCount; i++)         //远程渲染存储地形
 			{
 				bool Light = false;
@@ -529,6 +557,20 @@ namespace SerumW
             }
 		}
 
+		public Vector2 GetRandomPos(Vector2 Pos, float Range, ref bool Success)
+        {
+			Success = false;
+			int teleportStartX = Pos.ToTileCoordinates().X - (int)(Range / 16);
+			int teleportRangeX = (int)(Range / 8);
+			int teleportStartY = Pos.ToTileCoordinates().Y - (int)(Range / 16);
+			int teleportRangeY = (int)(Range / 8);
+			Vector2 vector = TestTeleport(ref Success, teleportStartX, teleportRangeX, teleportStartY, teleportRangeY);
+			if (Success)
+			{
+				return vector;
+			}
+			return Pos;
+		}
 
 		public Vector2 GetRandomPos()
         {
@@ -544,6 +586,8 @@ namespace SerumW
 			}
 			return Main.LocalPlayer.Center;
 		}
+
+
 
 		/*
 		private void SelectedTeleport(Vector2 Pos)
