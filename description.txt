@@ -9,15 +9,31 @@ v0.2
 -Now environment effects will not affect warping player.
 -Doubles the cooldown of Serum.
 -Wires will not be activated when warping.
+v0.3
+-Fix the issue that player cannot explore maps when warping.
+-Fix the issue about warping on the boundary of the world.
+-Now player will not get stuck easily after warping.
+v0.4
+-Minor details fixed.
+-Serum can damage town NPCs when you equip the corresponding voodoo dolls.
 
 
 该mod加入了游戏《废墟图书馆》中的血清-W。
-你可以使用15瓶随机传送药水[i:2351]，10瓶回忆药水[i:2350]，10个夜明锭[i:3467]，和250个纳米机器人[i:1346]在远古操纵机器[i:3549]处合成。
+你可以使用15瓶随机传送药水[i:2351]，10瓶回忆药水[i:2350]，10个夜明锭[i:3467]，和250个纳米机器人[i:1346]在远古操纵机
+[i:3549]处合成。
 由于技术原因，该mod并非十分稳定，但我会尽量修复。
 [c/FF0000:该mod不能联机。]
 
 更新日志:
+v0.2
 -一些bug修复。
 -现在环境效果不会影响正在穿梭的玩家。
 -血清冷却时间加倍。
 -穿梭时不会激活电路。
+v0.3
+-修复穿梭无法探明地图的问题。
+-修复了在世界边界穿梭的问题。
+-现在玩家不会轻易在传送结束后卡住了。
+v0.4
+-修复了少量细节。
+-装备巫毒娃娃时血清可以瞄准并伤害对应城镇NPC。

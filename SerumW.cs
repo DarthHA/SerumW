@@ -124,7 +124,7 @@ namespace SerumW
         #region Patch相关
         public static void DrawPlayerHook(On.Terraria.Main.orig_DrawPlayer orig, Main self, Player drawPlayer, Vector2 Position, float rotation, Vector2 rotationOrigin, float shadow = 0f)
         {
-            if (Main.gameMenu)
+            if (Main.gameMenu || Main.myPlayer == -1)
             {
                 orig.Invoke(self, drawPlayer, Position, rotation, rotationOrigin, shadow);
                 return;
@@ -210,6 +210,11 @@ namespace SerumW
 
         public static void DrawWatersHook(On.Terraria.Main.orig_drawWaters orig, Main self, bool bg, int styleOverride, bool allowUpdate)
         {
+            if (Main.myPlayer == -1)
+            {
+                orig.Invoke(self, bg, styleOverride, allowUpdate);
+                return;
+            }
             if (!IsCapturing)
             {
                 if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().warpingProgress == WarpingProgress.TPing)
@@ -223,6 +228,11 @@ namespace SerumW
 
         public static void DrawNPCHook(On.Terraria.Main.orig_DrawNPC orig, Main self, int iNPCIndex, bool behindTiles)
         {
+            if (Main.gameMenu || Main.myPlayer == -1)
+            {
+                orig.Invoke(self, iNPCIndex, behindTiles);
+                return;
+            }
             int target = Main.LocalPlayer.GetModPlayer<ClawPlayer>().SelectedTarget;
             if (IsCapturing)
             {
@@ -252,7 +262,7 @@ namespace SerumW
 
         public static void DrawNPCsHook(On.Terraria.Main.orig_DrawNPCs orig, Main self,bool BehindTile)
         {
-            if (!Main.gameMenu)
+            if (!Main.gameMenu && Main.myPlayer != -1)
             {
                 if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().warpingProgress == WarpingProgress.TPing)
                 {
@@ -314,15 +324,21 @@ namespace SerumW
 
                         }
                     }
-                }
 
+                    orig.Invoke(self, !BehindTile);
+                }
+                
             }
-            orig.Invoke(self, !BehindTile);
             orig.Invoke(self,BehindTile);
         }
 
         public static void DrawItemsHook(On.Terraria.Main.orig_DrawItems orig,Main self)
         {
+            if (Main.gameMenu || Main.myPlayer == -1)
+            {
+                orig.Invoke(self);
+                return;
+            }
             if (Main.LocalPlayer.GetModPlayer<ClawPlayer>().warpingProgress != WarpingProgress.TPing)
             {
                 orig.Invoke(self);
