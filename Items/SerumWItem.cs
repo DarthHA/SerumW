@@ -20,7 +20,7 @@ namespace SerumW.Items
 				"Inflict 25% damage to other surrounding enemies\n" +
 				"Serum will be consumed after attack\n" +
 				"1 minute duration\n" +
-				"P.S.: Do not use near the boundary of the world\n" +
+				"Cannot use on the boundary of the world\n" +
 				"\'It contains a powerful singularity technology\'");
 			Tooltip.AddTranslation(GameCulture.Chinese, 
 				"首次使用激活血清，然后选中一名敌人发起猛攻\n" +
@@ -28,7 +28,7 @@ namespace SerumW.Items
 				"对周围其他敌人造成25%溅射伤害\n" +
 				"血清会在攻击后被消耗\n" +
 				"1分钟持续时间\n" +
-				"注意：不要在世界边界附近使用\n" +
+				"无法在世界边界处使用\n" +
 				"“奇点技术，震撼人心”");
 		}
 
@@ -75,18 +75,20 @@ namespace SerumW.Items
 				item.autoReuse = false;
             }
 
-			/*
-            if (player.HasBuff(ModContent.BuffType<SerumBuff>()))
-            {
-				Vector2 ScreenPos = player.Center + new Vector2(Main.screenWidth, Main.screenHeight) / 2;
-				Vector2 vector = new Vector2(Main.leftWorld + 656f, Main.topWorld + 656f) - Main.GameViewMatrix.Translation;
-				Vector2 vector2 = new Vector2(Main.rightWorld - Main.screenWidth / Main.GameViewMatrix.Zoom.X - 672f, Main.bottomWorld - Main.screenHeight / Main.GameViewMatrix.Zoom.Y - 672f) - Main.GameViewMatrix.Translation;
-				vector = Utils.Round(vector);
-				vector2 = Utils.Round(vector2);
-				if (ScreenPos != Vector2.Clamp(ScreenPos, vector, vector2)) return false;
-				
-            }
-			*/
+
+			if (player.HasBuff(ModContent.BuffType<SerumBuff>()))
+			{
+				if (Main.screenPosition.ToTileCoordinates().X <= 45 || Main.screenPosition.ToTileCoordinates().Y <= 45)
+				{
+					return false;
+				}
+				Vector2 MouseScreenPos = Main.MouseWorld - new Vector2(Main.screenWidth, Main.screenHeight) / 2;
+				if (MouseScreenPos.ToTileCoordinates().X <= 45 || MouseScreenPos.ToTileCoordinates().Y <= 45)
+				{
+					return false;
+				}
+			}
+			
 			return true;
         }
 
@@ -97,7 +99,7 @@ namespace SerumW.Items
 				int targetNPC = -1;
 				foreach (NPC target in Main.npc)
 				{
-					if (CanBeChasedBy(target))
+					if (CanBeChasedBy(target, player))
 					{
 						if (Contains(target, Main.MouseWorld))
 						{
@@ -138,9 +140,11 @@ namespace SerumW.Items
 			return false;
 		}
 
-		public bool CanBeChasedBy(NPC npc)
+		public bool CanBeChasedBy(NPC npc,Player owner)
 		{
-			if (npc.type == NPCID.Angler) return true;
+			if (owner.killGuide && npc.type == NPCID.Guide && npc.active && !npc.dontTakeDamage) return true;
+			if (owner.killClothier && npc.type == NPCID.Clothier && npc.active && !npc.dontTakeDamage) return true;
+			if (npc.type == NPCID.Angler && npc.active) return true;
 			return npc.active && npc.lifeMax > 5 && !npc.dontTakeDamage && !npc.friendly && !npc.immortal;
 		}
 

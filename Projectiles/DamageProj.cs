@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SerumW.Buffs;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -114,9 +115,9 @@ namespace SerumW.Projectiles
                 }
             }
 
-            //造成伤害,对周围敌人造成25%溅射伤害，不带效果
+			//造成伤害,对周围敌人造成25%溅射伤害，不带效果
 
-            dmg = (int)target.StrikeNPC(dmg, 0, 0);
+			dmg = (int)StrikeNPC(target, dmg, 0, 0);
             owner.addDPS(dmg);
             foreach (NPC subtarget in Main.npc)
             {
@@ -166,10 +167,307 @@ namespace SerumW.Projectiles
 
         }
 
-        public bool CanBeChasedBy(NPC npc)
-        {
-            if (npc.type == NPCID.Angler) return true;
-            return npc.active && npc.lifeMax > 5 && !npc.dontTakeDamage && !npc.friendly && !npc.immortal;
-        }
-    }
+		public bool CanBeChasedBy(NPC npc)
+		{
+			if (Main.player[projectile.owner].killGuide && npc.type == NPCID.Guide && npc.active && !npc.dontTakeDamage) return true;
+			if (Main.player[projectile.owner].killClothier && npc.type == NPCID.Clothier && npc.active && !npc.dontTakeDamage) return true;
+			if (npc.type == NPCID.Angler && npc.active) return true;
+			return npc.active && npc.lifeMax > 5 && !npc.dontTakeDamage && !npc.friendly && !npc.immortal;
+		}
+
+
+
+		public double StrikeNPC(NPC npc, int Damage, float knockBack, int hitDirection, bool crit = false, bool fromNet = false)
+		{
+			bool flag = Main.netMode == NetmodeID.SinglePlayer;
+			var ReflectTarget = typeof(NPC).GetField("ignorePlayerInteractions", BindingFlags.NonPublic | BindingFlags.Static);
+
+			if (flag && (int)ReflectTarget.GetValue(new NPC()) > 0)
+			{
+				ReflectTarget.SetValue(new NPC(), (int)ReflectTarget.GetValue(new NPC()) - 1);
+				flag = false;
+			}
+			
+			if (!npc.active || npc.life <= 0)
+			{
+				return 0.0;
+			}
+			double dmg = Damage;
+			int def = npc.defense;
+			if (npc.ichor)
+			{
+				def -= 20;
+			}
+			if (npc.betsysCurse)
+			{
+				def -= 40;
+			}
+			if (def < 0)
+			{
+				def = 0;
+			}
+
+			double OriginalDmg = dmg;
+			NPCLoader.StrikeNPC(npc, ref dmg, def, ref knockBack, hitDirection, ref crit);
+            if (dmg < OriginalDmg / 2)
+            {
+				dmg = OriginalDmg;
+            }
+			dmg = Main.CalculateDamage((int)dmg, def);
+			if (crit)
+			{
+				dmg *= 2.0;
+			}
+			if (npc.takenDamageMultiplier > 1f)
+			{
+				dmg *= npc.takenDamageMultiplier;
+			}
+			
+			if ((npc.takenDamageMultiplier > 1f || Damage != 9999) && npc.lifeMax > 1)
+			{
+				if (npc.friendly)
+				{
+					Color color = crit ? CombatText.DamagedFriendlyCrit : CombatText.DamagedFriendly;
+					CombatText.NewText(new Rectangle((int)npc.position.X, (int)npc.position.Y, npc.width, npc.height), color, (int)dmg, crit, false);
+				}
+				else
+				{
+					Color color2 = crit ? CombatText.DamagedHostileCrit : CombatText.DamagedHostile;
+					if (fromNet)
+					{
+						color2 = crit ? CombatText.OthersDamagedHostileCrit : CombatText.OthersDamagedHostile;
+					}
+					CombatText.NewText(new Rectangle((int)npc.position.X, (int)npc.position.Y, npc.width, npc.height), color2, (int)dmg, crit, false);
+				}
+			}
+			if (dmg >= 1.0)
+			{
+				if (flag)
+				{
+					npc.PlayerInteraction(Main.myPlayer);
+				}
+				npc.justHit = true;
+				if (npc.townNPC)
+				{
+					bool flag2 = npc.aiStyle == 7 && (npc.ai[0] == 3f || npc.ai[0] == 4f || npc.ai[0] == 16f || npc.ai[0] == 17f);
+					if (flag2)
+					{
+						NPC npctmp = Main.npc[(int)npc.ai[2]];
+						if (npctmp.active)
+						{
+							npctmp.ai[0] = 1f;
+							npctmp.ai[1] = 300 + Main.rand.Next(300);
+							npctmp.ai[2] = 0f;
+							npctmp.localAI[3] = 0f;
+							npctmp.direction = hitDirection;
+							npctmp.netUpdate = true;
+						}
+					}
+					npc.ai[0] = 1f;
+					npc.ai[1] = 300 + Main.rand.Next(300);
+					npc.ai[2] = 0f;
+					npc.localAI[3] = 0f;
+					npc.direction = hitDirection;
+					npc.netUpdate = true;
+				}
+				if (npc.aiStyle == 8 && Main.netMode != 1)
+				{
+					if (npc.type == NPCID.RuneWizard)
+					{
+						npc.ai[0] = 450f;
+					}
+					else if (npc.type == NPCID.Necromancer || npc.type == NPCID.NecromancerArmored)
+					{
+						if (Main.rand.Next(2) == 0)
+						{
+							npc.ai[0] = 390f;
+							npc.netUpdate = true;
+						}
+					}
+					else if (npc.type == NPCID.DesertDjinn)
+					{
+						if (Main.rand.Next(3) != 0)
+						{
+							npc.ai[0] = 181f;
+							npc.netUpdate = true;
+						}
+					}
+					else
+					{
+						npc.ai[0] = 400f;
+					}
+					npc.TargetClosest(true);
+				}
+				if (npc.aiStyle == 97 && Main.netMode != 1)
+				{
+					npc.localAI[1] = 1f;
+					npc.TargetClosest(true);
+				}
+				if (npc.type == NPCID.DetonatingBubble)
+				{
+					dmg = 0.0;
+					npc.ai[0] = 1f;
+					npc.ai[1] = 4f;
+					npc.dontTakeDamage = true;
+				}
+				if (npc.type == NPCID.SantaNK1 && npc.life >= npc.lifeMax * 0.5 && npc.life - dmg < npc.lifeMax * 0.5)
+				{
+					Gore.NewGore(npc.position, npc.velocity, 517, 1f);
+				}
+				if (npc.type == NPCID.SpikedIceSlime)
+				{
+					npc.localAI[0] = 60f;
+				}
+				if (npc.type == NPCID.SlimeSpiked)
+				{
+					npc.localAI[0] = 60f;
+				}
+				if (npc.type == NPCID.SnowFlinx)
+				{
+					npc.localAI[0] = 1f;
+				}
+				if (!npc.immortal)
+				{
+					if (npc.realLife >= 0)
+					{
+						Main.npc[npc.realLife].life -= (int)dmg;
+						npc.life = Main.npc[npc.realLife].life;
+						npc.lifeMax = Main.npc[npc.realLife].lifeMax;
+					}
+					else
+					{
+						npc.life -= (int)dmg;
+					}
+				}
+				if (knockBack > 0f && npc.knockBackResist > 0f)
+				{
+					float num3 = knockBack * npc.knockBackResist;
+					if (num3 > 8f)
+					{
+						float num4 = num3 - 8f;
+						num4 *= 0.9f;
+						num3 = 8f + num4;
+					}
+					if (num3 > 10f)
+					{
+						float num5 = num3 - 10f;
+						num5 *= 0.8f;
+						num3 = 10f + num5;
+					}
+					if (num3 > 12f)
+					{
+						float num6 = num3 - 12f;
+						num6 *= 0.7f;
+						num3 = 12f + num6;
+					}
+					if (num3 > 14f)
+					{
+						float num7 = num3 - 14f;
+						num7 *= 0.6f;
+						num3 = 14f + num7;
+					}
+					if (num3 > 16f)
+					{
+						num3 = 16f;
+					}
+					if (crit)
+					{
+						num3 *= 1.4f;
+					}
+					int num8 = (int)dmg * 10;
+					if (Main.expertMode)
+					{
+						num8 = (int)dmg * 15;
+					}
+					if (num8 > npc.lifeMax)
+					{
+						if (hitDirection < 0 && npc.velocity.X > -num3)
+						{
+							if (npc.velocity.X > 0f)
+							{
+								npc.velocity.X -= num3;
+							}
+							npc.velocity.X -= num3;
+							if (npc.velocity.X < -num3)
+							{
+								npc.velocity.X = -num3;
+							}
+						}
+						else if (hitDirection > 0 && npc.velocity.X < num3)
+						{
+							if (npc.velocity.X < 0f)
+							{
+								npc.velocity.X += num3;
+							}
+							npc.velocity.X += num3;
+							if (npc.velocity.X > num3)
+							{
+								npc.velocity.X = num3;
+							}
+						}
+						if (npc.type == NPCID.SnowFlinx)
+						{
+							num3 *= 1.5f;
+						}
+						if (!npc.noGravity)
+						{
+							num3 *= -0.75f;
+						}
+						else
+						{
+							num3 *= -0.5f;
+						}
+						if (npc.velocity.Y > num3)
+						{
+							npc.velocity.Y += num3;
+							if (npc.velocity.Y < num3)
+							{
+								npc.velocity.Y = num3;
+							}
+						}
+					}
+					else
+					{
+						if (!npc.noGravity)
+						{
+							npc.velocity.Y = -num3 * 0.75f * npc.knockBackResist;
+						}
+						else
+						{
+							npc.velocity.Y = -num3 * 0.5f * npc.knockBackResist;
+						}
+						npc.velocity.X = num3 * hitDirection * npc.knockBackResist;
+					}
+				}
+				if ((npc.type == NPCID.WallofFlesh || npc.type == NPCID.WallofFleshEye) && npc.life <= 0)
+				{
+					for (int i = 0; i < 200; i++)
+					{
+						if (Main.npc[i].active && (Main.npc[i].type == NPCID.WallofFlesh || Main.npc[i].type == NPCID.WallofFleshEye))
+						{
+							Main.npc[i].HitEffect(hitDirection, dmg);
+						}
+					}
+				}
+				else
+				{
+					npc.HitEffect(hitDirection, dmg);
+				}
+				if (npc.HitSound != null)
+				{
+					Main.PlaySound(npc.HitSound, npc.position);
+				}
+				if (npc.realLife >= 0)
+				{
+					Main.npc[npc.realLife].checkDead();
+				}
+				else
+				{
+					npc.checkDead();
+				}
+				return dmg;
+			}
+			return 0.0;
+		}
+	}
 }
